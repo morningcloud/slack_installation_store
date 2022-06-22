@@ -1,4 +1,5 @@
 # slack-OAuth-store
+A wapper class of FileInstallationStore to support encryption at rest
 
 ## Example with Bolt
 ```

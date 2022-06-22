@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setuptools.setup(
     name='slack-oauth-store',
-    version='0.0.1',
+    version='0.0.3',
     author='Ghawady Ehmaid',
     author_email='ghawady.ehmaid@gmail.com',
     description='Implementing Encrypted FileInstallationStore for Slack OAuth flow',
