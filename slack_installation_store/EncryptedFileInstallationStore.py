@@ -158,8 +158,30 @@ class EncryptedFileInstallationStore(FileInstallationStore):
             installation_filepath = f"{self.base_dir}/{e_id}-{t_id}/installer-{user_id}-latest"
 
         try:
+            installation: Optional[Installation] = None
             data = self.read_from_file(installation_filepath) 
-            return Installation(**data)
+            installation = Installation(**data)
+            # Sync with PR https://github.com/slackapi/python-slack-sdk/pull/1223
+            if installation is not None and user_id is not None:
+                # Retrieve the latest bot token, just in case
+                # See also: https://github.com/slackapi/bolt-python/issues/664
+                latest_bot_installation = self.find_installation(
+                    enterprise_id=enterprise_id,
+                    team_id=team_id,
+                    is_enterprise_install=is_enterprise_install,
+                )
+                if latest_bot_installation is not None and installation.bot_token != latest_bot_installation.bot_token:
+                    # NOTE: this logic is based on the assumption that every single installation has bot scopes
+                    # If you need to installation patterns without bot scopes in the same S3 bucket,
+                    # please fork this code and implement your own logic.
+                    installation.bot_id = latest_bot_installation.bot_id
+                    installation.bot_user_id = latest_bot_installation.bot_user_id
+                    installation.bot_token = latest_bot_installation.bot_token
+                    installation.bot_scopes = latest_bot_installation.bot_scopes
+                    installation.bot_refresh_token = latest_bot_installation.bot_refresh_token
+                    installation.bot_token_expires_at = latest_bot_installation.bot_token_expires_at
+
+            return installation
         except FileNotFoundError as e:
             message = f"Installation data missing for enterprise: {e_id}, team: {t_id}: {e}"
             self.logger.debug(message)
